@@ -367,6 +367,18 @@ textarea {
   opacity: 0.75;
 }
 
+
+/* Login-Ansicht: automatischer Login nach Codeeingabe, kein Button/kein Hinweis */
+#lock .lock-btn,
+#lock .lock-hint,
+#guest-login-btn,
+#direct-access-link {
+  display: none !important;
+}
+.lock-input-wrap {
+  gap: 0.5rem;
+}
+
 </style>
 </head>
 <body>
@@ -459,9 +471,7 @@ let currentFilter = 'all';
 <div class="lock-input-wrap">
 <input autocomplete="current-password" inputmode="numeric" pattern="[0-9]*" class="lock-input" id="pw-input" placeholder="Passwort" type="password"/>
 <div class="lock-error" id="pw-error"></div>
-<button type="button" class="lock-btn" onclick="checkPw()">Eintreten</button>
 </div>
-<div class="lock-hint" id="pw-hint">Das Datum ohne Punkte</div>
 </div>
 <div id="site">
 <div class="hero">
@@ -921,6 +931,75 @@ function showAdminFromFooter() {}
 function checkAdminPw() {}
 function openAdmin() {}
 function closeAdmin() {}
+
+
+/* AUTOMATISCHER LOGIN OHNE BUTTON */
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function expectedPw(){
+    return (window.CONFIG && CONFIG.guestPassword) ? String(CONFIG.guestPassword) : '03042027';
+  }
+  window.unlockSite = window.unlockSite || function(){
+    var lock = byId('lock');
+    var site = byId('site');
+    if (lock) {
+      lock.classList.add('hidden');
+      lock.style.opacity = '0';
+      lock.style.visibility = 'hidden';
+      lock.style.pointerEvents = 'none';
+    }
+    if (site) {
+      site.classList.add('visible');
+      site.style.display = 'block';
+    }
+    try { sessionStorage.setItem('wedding_ej_unlocked', '1'); } catch(e) {}
+  };
+  window.checkPw = function(fromCode){
+    var input = byId('pw-input');
+    var error = byId('pw-error');
+    var value = fromCode ? expectedPw() : (input ? String(input.value || '').trim() : '');
+    if (value === expectedPw()) {
+      window.unlockSite();
+      return true;
+    }
+    if (value.length >= expectedPw().length && error) {
+      error.textContent = 'Falsches Passwort';
+      setTimeout(function(){ error.textContent = ''; }, 2500);
+      if (input) input.value = '';
+    }
+    return false;
+  };
+  function start(){
+    var input = byId('pw-input');
+    if (input && !input.dataset.autologinReady) {
+      input.dataset.autologinReady = '1';
+      input.addEventListener('input', function(){
+        if (String(input.value || '').trim() === expectedPw()) {
+          setTimeout(function(){ window.checkPw(false); }, 30);
+        }
+      });
+      input.addEventListener('keydown', function(ev){
+        if (ev.key === 'Enter' || ev.keyCode === 13) {
+          ev.preventDefault();
+          window.checkPw(false);
+        }
+      });
+    }
+    try {
+      var q = window.location.search || '';
+      var h = window.location.hash || '';
+      var pw = expectedPw();
+      if (q.indexOf('code=' + encodeURIComponent(pw)) !== -1 || h.indexOf(pw) !== -1) {
+        window.checkPw(true);
+      } else if (sessionStorage.getItem('wedding_ej_unlocked') === '1') {
+        window.checkPw(true);
+      }
+    } catch(e) {}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+  window.addEventListener('load', start);
+})();
 
 </script>
 </body>
