@@ -352,6 +352,21 @@ textarea {
   color: var(--ivory);
 }
 
+
+/* Admin-Login entfernt */
+#admin-login-overlay,
+#admin-overlay,
+.footer-admin-link,
+#guest-login-btn,
+#direct-access-link {
+  display: none !important;
+}
+.lock-hint {
+  cursor: default;
+  text-decoration: none;
+  opacity: 0.75;
+}
+
 </style>
 </head>
 <body>
@@ -897,6 +912,15 @@ function runBasicSelfTest() {
   window.addEventListener('load', start);
   setTimeout(start, 300);
 })();
+
+
+/* Adminbereich entfernt: Verwaltung erfolgt zentral in Google Sheets. */
+function showAdminLogin() {}
+function hideAdminLogin() {}
+function showAdminFromFooter() {}
+function checkAdminPw() {}
+function openAdmin() {}
+function closeAdmin() {}
 
 </script>
 </body>
